@@ -59,7 +59,7 @@ export default function Dashboard() {
               <p className="font-pixel text-[6px] text-destructive ">AT RISK!</p>
             )}
           </div>
-          <div className="pixel-border bg-primary/10 p-3 text-center">
+          {/* <div className="pixel-border bg-primary/10 p-3 text-center">
             <span className="text-xl">📋</span>
             <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{tasks.length}</p>
             <p className="font-pixel text-[7px] text-muted-foreground">TOTAL</p>
@@ -77,7 +77,7 @@ export default function Dashboard() {
             <p className="font-pixel text-[7px] text-muted-foreground">
               {overdue.length > 0 ? "OVERDUE" : "ACTIVE"}
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Add button */}
@@ -118,7 +118,7 @@ export default function Dashboard() {
 
         {/* Progress Summary */}
         <section className="pixel-border-lg bg-card p-4 sm:p-5">
-          <h3 className="font-pixel text-[9px] text-primary mb-3">🏆 PROGRESS SUMMARY</h3>
+          <h3 className="font-pixel text-[9px] text-primary mb-3">PROGRESS SUMMARY</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-pixel-body text-lg">
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Overdue</p>

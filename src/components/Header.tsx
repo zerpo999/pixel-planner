@@ -54,7 +54,7 @@ export default function Header() {
                 onClick={() => { logout(); navigate("/"); }}
                 className="px-2 sm:px-3 py-1 bg-destructive text-destructive-foreground font-pixel text-[7px] sm:text-[8px] pixel-btn"
               >
-                EXIT
+                LOG OUT
               </button>
             </>
           )}

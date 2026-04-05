@@ -16,12 +16,12 @@ export default function WelcomePage() {
           {/* Left side */}
           <div className="text-center md:text-left">
             <div className="mb-6">
-              <span className=" block mb-4"><img src="/logo.png" alt="Pixel Planner Logo" className="h-16 w-16 object-contain mx-auto md:mx-3"/></span>
+              {/* <span className=" block mb-4"><img src="/logo.png" alt="Pixel Planner Logo" className="h-16 w-16 object-contain mx-auto md:mx-3"/></span> */}
               <h1 className="font-pixel text-primary text-sm sm:text-xl leading-relaxed">
                 Pixel Planner
               </h1>
               <p className="font-pixel-body text-xl sm:text-2xl text-foreground mt-4 leading-relaxed">
-                Level up your study game! Track tasks, build streaks, and conquer your goals.
+                Level up your study game! 
               </p>
             </div>
 
@@ -61,7 +61,7 @@ export default function WelcomePage() {
 
       <footer className="text-center p-4">
         <p className="font-pixel text-[7px] text-muted-foreground">
-          © 2026 PIXEL PLANNER — PRESS START TO BEGIN
+          © 2026 PIXEL PLANNER
         </p>
       </footer>
     </div>

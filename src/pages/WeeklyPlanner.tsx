@@ -48,7 +48,7 @@ export default function WeeklyPlanner() {
             ◀ PREV
           </button>
           <h2 className="font-pixel text-primary text-[10px] sm:text-xs">
-            🗓️ WEEKLY PLANNER {weekOffset === 0 ? "(THIS WEEK)" : ""}
+            WEEKLY PLANNER {weekOffset === 0 ? "(THIS WEEK)" : ""}
           </h2>
           <button onClick={() => setWeekOffset((w) => w + 1)} className="px-3 py-1 font-pixel text-[9px] pixel-btn bg-muted text-foreground">
             NEXT ▶
@@ -59,7 +59,7 @@ export default function WeeklyPlanner() {
           onClick={() => { setEditingTask(null); setShowDialog(true); }}
           className="mb-4 px-4 py-2 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
         >
-          ✨ NEW QUEST
+          ✨ NEW TASK
         </button>
 
         {/* Week grid */}

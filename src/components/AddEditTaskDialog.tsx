@@ -85,7 +85,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="w-full max-w-md pixel-border-lg bg-card p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="font-pixel text-primary text-[10px] sm:text-xs mb-5">
-          {editTask ? "✏️ EDIT QUEST" : "✨ NEW QUEST"}
+          {editTask ? "✏️ EDIT TASK" : "✨ NEW TASK"}
         </h2>
 
         <div className="space-y-4">
@@ -98,7 +98,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
-              placeholder="What's the quest?"
+              placeholder="task name"
             />
           </div>
 
@@ -135,7 +135,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
           {/* Color */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              🎨 Color
+              🎨 Label
             </label>
             <div className="flex gap-2 flex-wrap">
               {COLORS.map((c) => (
