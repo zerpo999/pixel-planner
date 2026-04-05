@@ -45,7 +45,7 @@ export default function Dashboard() {
         {/* Greeting */}
         <div className="mb-4">
           <h2 className="font-pixel text-primary text-[10px] sm:text-xs">
-            {getGreeting()}, {user?.username}! 👋
+            {getGreeting()}, {user?.fullName || user?.username}! 👋
           </h2>
         </div>
 

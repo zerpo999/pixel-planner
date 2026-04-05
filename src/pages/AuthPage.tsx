@@ -9,6 +9,7 @@ export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(searchParams.get("mode") !== "register");
   const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -30,6 +31,10 @@ export default function AuthPage() {
     }
 
     if (!isLogin) {
+      if (!fullName.trim()) {
+        setErrors(["Full name is required"]);
+        return;
+      }
       const pwErrors = validatePassword(password);
       if (pwErrors.length > 0) {
         setErrors(pwErrors);
@@ -44,7 +49,7 @@ export default function AuthPage() {
         return;
       }
     } else {
-      const ok = await register(username, password);
+      const ok = await register(username, password, fullName);
       if (!ok) {
         setErrors(["Username already taken!"]);
         return;
@@ -78,6 +83,18 @@ export default function AuthPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div>
+                <label className="font-pixel text-[10px] text-foreground block mb-2">✨ Full Name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
+                  placeholder="Your Name"
+                />
+              </div>
+            )}
             <div>
               <label className="font-pixel text-[10px] text-foreground block mb-2">👤 Username</label>
               <input
@@ -132,7 +149,7 @@ export default function AuthPage() {
           </form>
 
           <button
-            onClick={() => { setIsLogin(!isLogin); setErrors([]); }}
+            onClick={() => { setIsLogin(!isLogin); setErrors([]); setFullName(""); }}
             className="w-full mt-4 text-center text-muted-foreground font-pixel text-[8px] hover:text-primary transition-colors"
           >
             {isLogin ? "New player? SIGN UP" : "Returning? LOG IN"}

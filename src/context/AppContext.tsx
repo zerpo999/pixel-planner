@@ -11,7 +11,7 @@ interface AppContextType {
   streak: Streak;
   loading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
-  register: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string, fullName: string) => Promise<boolean>;
   logout: () => void;
   addTask: (task: Omit<Task, "id" | "completed" | "created_at">) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
@@ -53,9 +53,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (user) refreshTasks();
   }, [user, refreshTasks]);
 
-  const register = async (username: string, password: string): Promise<boolean> => {
+  const register = async (username: string, password: string, fullName: string): Promise<boolean> => {
     try {
-      const u = await apiRegister(username, password);
+      const u = await apiRegister(username, password, fullName);
       setUser(u);
       return true;
     } catch {
