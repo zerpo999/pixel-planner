@@ -23,13 +23,12 @@ export default function HistoryPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto p-3 sm:p-4 max-w-4xl">
-        <h2 className="font-pixel text-primary text-[10px] sm:text-xs mb-4">📜 QUEST HISTORY</h2>
+        <h2 className="font-pixel text-primary text-[10px] sm:text-xs mb-4">TASK HISTORY</h2>
 
         {completedTasks.length === 0 ? (
           <div className="pixel-border-lg bg-card p-8 text-center">
-            <span className="text-4xl">🏜️</span>
             <p className="font-pixel text-[8px] text-muted-foreground mt-4">
-              No completed quests yet. Go finish some!
+              No completed quests yet. 
             </p>
           </div>
         ) : (

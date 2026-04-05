@@ -45,7 +45,7 @@ export default function Dashboard() {
         {/* Greeting */}
         <div className="mb-4">
           <h2 className="font-pixel text-primary text-[10px] sm:text-xs">
-            {getGreeting()}, {user?.fullName || user?.username}! 👋
+            {getGreeting()}, {user?.fullName || user?.username}!
           </h2>
         </div>
 
@@ -56,7 +56,7 @@ export default function Dashboard() {
             <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{streak.current}</p>
             <p className="font-pixel text-[7px] text-muted-foreground">STREAK</p>
             {streakAtRisk && (
-              <p className="font-pixel text-[6px] text-destructive animate-blink mt-1">AT RISK!</p>
+              <p className="font-pixel text-[6px] text-destructive ">AT RISK!</p>
             )}
           </div>
           <div className="pixel-border bg-primary/10 p-3 text-center">
@@ -85,15 +85,15 @@ export default function Dashboard() {
           onClick={() => { setEditingTask(null); setShowDialog(true); }}
           className="mb-4 px-4 py-2 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
         >
-          ✨ NEW QUEST
+          ✨ NEW TASK
         </button>
 
         {/* Due Today */}
         <section className="mb-6">
-          <h3 className="font-pixel text-[9px] text-foreground mb-2">📌 DUE TODAY</h3>
+          <h3 className="font-pixel text-[9px] text-foreground mb-2">DUE TODAY</h3>
           {dueToday.length === 0 ? (
             <div className="pixel-border bg-card p-4 text-center">
-              <p className="font-pixel text-[8px] text-muted-foreground">No quests due today! 🎉</p>
+              <p className="font-pixel text-[8px] text-muted-foreground">No tasks due today</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -104,10 +104,10 @@ export default function Dashboard() {
 
         {/* This Week */}
         <section className="mb-6">
-          <h3 className="font-pixel text-[9px] text-foreground mb-2">📅 THIS WEEK</h3>
+          <h3 className="font-pixel text-[9px] text-foreground mb-2">THIS WEEK</h3>
           {thisWeek.length === 0 ? (
             <div className="pixel-border bg-card p-4 text-center">
-              <p className="font-pixel text-[8px] text-muted-foreground">All clear for this week! 🏖️</p>
+              <p className="font-pixel text-[8px] text-muted-foreground">All clear for this week</p>
             </div>
           ) : (
             <div className="space-y-2">

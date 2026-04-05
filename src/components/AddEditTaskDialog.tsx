@@ -8,13 +8,15 @@ interface Props {
   editTask?: Task | null;
 }
 
-const CATEGORIES = ["Study", "Homework", "Project", "Reading", "Review", "Other"];
+const CATEGORIES = ["Study", "Homework", "Project", "Reading", "Review"];
 const COLORS = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#74c0fc", "#b197fc", "#f783ac"];
 
 export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
   const { addTask, updateTask, deleteTask } = useApp();
+
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Study");
+  const [customCategory, setCustomCategory] = useState(""); // NEW
   const [color, setColor] = useState(COLORS[0]);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<Task["priority"]>("medium");
@@ -24,6 +26,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     if (editTask) {
       setTitle(editTask.title);
       setCategory(editTask.category);
+      setCustomCategory(""); // reset custom field
       setColor(editTask.color);
       setDueDate(editTask.due_date);
       setPriority(editTask.priority);
@@ -31,6 +34,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     } else {
       setTitle("");
       setCategory("Study");
+      setCustomCategory("");
       setColor(COLORS[0]);
       setDueDate(new Date().toISOString().split("T")[0]);
       setPriority("medium");
@@ -42,11 +46,31 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
 
   const handleSubmit = async () => {
     if (!title.trim() || !dueDate) return;
+
+    const finalCategory =
+      category === "__custom" ? customCategory.trim() : category;
+
+    if (!finalCategory) return; // prevent empty custom category
+
     if (editTask) {
-      await updateTask(editTask.id, { title, category, color, due_date: dueDate, priority, completed });
+      await updateTask(editTask.id, {
+        title,
+        category: finalCategory,
+        color,
+        due_date: dueDate,
+        priority,
+        completed,
+      });
     } else {
-      await addTask({ title, category, color, due_date: dueDate, priority });
+      await addTask({
+        title,
+        category: finalCategory,
+        color,
+        due_date: dueDate,
+        priority,
+      });
     }
+
     onClose();
   };
 
@@ -67,7 +91,9 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <label className="font-pixel text-[8px] text-foreground block mb-1">📝 Task Name</label>
+            <label className="font-pixel text-[8px] text-foreground block mb-1">
+              📝 Task Name
+            </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -78,27 +104,47 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
 
           {/* Category */}
           <div>
-            <label className="font-pixel text-[8px] text-foreground block mb-1">📂 Category</label>
+            <label className="font-pixel text-[8px] text-foreground block mb-1">
+              📂 Category
+            </label>
+
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none"
             >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
+              <option value="__custom">➕ Custom...</option>
             </select>
+
+            {category === "__custom" && (
+              <input
+                type="text"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="Enter custom category"
+                className="mt-2 w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none"
+              />
+            )}
           </div>
 
           {/* Color */}
           <div>
-            <label className="font-pixel text-[8px] text-foreground block mb-1">🎨 Color</label>
+            <label className="font-pixel text-[8px] text-foreground block mb-1">
+              🎨 Color
+            </label>
             <div className="flex gap-2 flex-wrap">
               {COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 pixel-border ${color === c ? "ring-2 ring-primary scale-110" : ""}`}
+                  className={`w-8 h-8 pixel-border ${
+                    color === c ? "ring-2 ring-primary scale-110" : ""
+                  }`}
                   style={{ backgroundColor: c }}
                 />
               ))}
@@ -113,7 +159,9 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
 
           {/* Due Date */}
           <div>
-            <label className="font-pixel text-[8px] text-foreground block mb-1">📅 Due Date</label>
+            <label className="font-pixel text-[8px] text-foreground block mb-1">
+              📅 Due Date
+            </label>
             <input
               type="date"
               value={dueDate}
@@ -124,7 +172,9 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
 
           {/* Priority */}
           <div>
-            <label className="font-pixel text-[8px] text-foreground block mb-1">⚡ Priority</label>
+            <label className="font-pixel text-[8px] text-foreground block mb-1">
+              ⚡ Priority
+            </label>
             <div className="flex gap-2">
               {(["low", "medium", "high"] as const).map((p) => (
                 <button
@@ -132,8 +182,10 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
                   onClick={() => setPriority(p)}
                   className={`flex-1 py-2 font-pixel text-[8px] pixel-btn ${
                     priority === p
-                      ? p === "low" ? "bg-yellow-400 text-yellow-900"
-                        : p === "medium" ? "bg-orange-400 text-orange-900"
+                      ? p === "low"
+                        ? "bg-yellow-400 text-yellow-900"
+                        : p === "medium"
+                        ? "bg-orange-400 text-orange-900"
                         : "bg-red-400 text-red-900"
                       : "bg-muted text-muted-foreground"
                   }`}
@@ -153,7 +205,9 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
                 onChange={(e) => setCompleted(e.target.checked)}
                 className="w-5 h-5 accent-primary"
               />
-              <span className="font-pixel text-[8px] text-foreground">✅ Completed</span>
+              <span className="font-pixel text-[8px] text-foreground">
+                ✅ Completed
+              </span>
             </label>
           )}
         </div>

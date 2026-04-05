@@ -16,12 +16,12 @@ export default function WelcomePage() {
           {/* Left side */}
           <div className="text-center md:text-left">
             <div className="mb-6">
-              <span className="text-5xl sm:text-6xl block mb-4 animate-bounce-pixel">🎮</span>
-              <h1 className="font-pixel text-primary text-sm sm:text-lg leading-relaxed">
-                Study Quest
+              <span className=" block mb-4"><img src="/logo.png" alt="Pixel Planner Logo" className="h-16 w-16 object-contain mx-auto md:mx-3"/></span>
+              <h1 className="font-pixel text-primary text-sm sm:text-xl leading-relaxed">
+                Pixel Planner
               </h1>
               <p className="font-pixel-body text-xl sm:text-2xl text-foreground mt-4 leading-relaxed">
-                Level up your study game! Track tasks, build streaks, and conquer your goals — RPG style.
+                Level up your study game! Track tasks, build streaks, and conquer your goals.
               </p>
             </div>
 
@@ -29,7 +29,7 @@ export default function WelcomePage() {
               📋 Manage tasks with priorities & categories<br />
               🔥 Build daily completion streaks<br />
               📅 Calendar & weekly planner views<br />
-              🏆 Track your progress like a pro
+              🏆 Track your progress
             </p>
 
             <div className="flex gap-3 justify-center md:justify-start">
@@ -51,15 +51,9 @@ export default function WelcomePage() {
           {/* Right side - placeholder for demo image */}
           <div className="hidden md:flex items-center justify-center">
             <div className="pixel-border-lg bg-card p-8 w-full max-w-sm aspect-square flex flex-col items-center justify-center">
-              <span className="text-6xl mb-4">🏰</span>
               <p className="font-pixel text-[8px] text-muted-foreground text-center leading-relaxed">
-                DEMO IMAGE<br />PLACEHOLDER
+                PLACEHOLDER
               </p>
-              <div className="mt-4 flex gap-2">
-                <span className="text-2xl">⚔️</span>
-                <span className="text-2xl">📚</span>
-                <span className="text-2xl">🌟</span>
-              </div>
             </div>
           </div>
         </div>
@@ -67,7 +61,7 @@ export default function WelcomePage() {
 
       <footer className="text-center p-4">
         <p className="font-pixel text-[7px] text-muted-foreground">
-          © 2026 STUDY QUEST — PRESS START TO BEGIN
+          © 2026 PIXEL PLANNER — PRESS START TO BEGIN
         </p>
       </footer>
     </div>

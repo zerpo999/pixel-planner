@@ -8,18 +8,20 @@ export default function Header() {
   const location = useLocation();
 
   const navItems = [
-    { path: "/dashboard", label: "📋 QUESTS" },
-    { path: "/calendar", label: "📅 CALENDAR" },
-    { path: "/planner", label: "🗓️ PLANNER" },
-    { path: "/history", label: "📜 HISTORY" },
+    { path: "/dashboard", label: "HOME" },
+    { path: "/calendar", label: "CALENDAR" },
+    { path: "/planner", label: "PLANNER" },
+    { path: "/history", label: "HISTORY" },
   ];
 
   return (
     <header className="pixel-border-lg bg-card p-3 sm:p-4 mx-2 sm:mx-4 mt-2 sm:mt-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-2xl cursor-pointer" onClick={() => navigate("/dashboard")}>🎮</span>
-          <h1 className="font-pixel text-primary text-[8px] sm:text-[10px] hidden sm:block">Study Quest</h1>
+          <span className="text-2xl cursor-pointer" onClick={() => navigate("/dashboard")}>
+            <img src="logo.png" alt="Logo" className="w-8 h-8" />
+          </span>
+          <h1 className="font-pixel text-primary text-[8px] sm:text-[10px] hidden sm:block">Pixel Planner </h1>
         </div>
 
         {user && (
