@@ -18,7 +18,7 @@ function headers(): HeadersInit {
 // Since no real backend exists, we use localStorage as mock storage.
 // The API functions simulate what real API calls would look like.
 
-function getStoredUsers(): Record<string, { password: string; id: string }> {
+function getStoredUsers(): Record<string, { password: string; id: string; fullName: string }> {
   return JSON.parse(localStorage.getItem("sq_users") || "{}");
 }
 
@@ -41,13 +41,13 @@ function saveStoredStreak(userId: string, streak: Streak) {
 }
 
 // Auth
-export async function apiRegister(username: string, password: string): Promise<User> {
+export async function apiRegister(username: string, password: string, fullName: string): Promise<User> {
   const users = getStoredUsers();
   if (users[username]) throw new Error("Username already taken");
   const id = crypto.randomUUID();
-  users[username] = { password, id };
+  users[username] = { password, id, fullName };
   localStorage.setItem("sq_users", JSON.stringify(users));
-  const user: User = { id, username, token: `token_${id}` };
+  const user: User = { id, username, fullName, token: `token_${id}` };
   localStorage.setItem("sq_current_user", JSON.stringify(user));
   return user;
 }
@@ -56,7 +56,7 @@ export async function apiLogin(username: string, password: string): Promise<User
   const users = getStoredUsers();
   const entry = users[username];
   if (!entry || entry.password !== password) throw new Error("Invalid credentials");
-  const user: User = { id: entry.id, username, token: `token_${entry.id}` };
+  const user: User = { id: entry.id, username, fullName: entry.fullName || username, token: `token_${entry.id}` };
   localStorage.setItem("sq_current_user", JSON.stringify(user));
   return user;
 }

@@ -8,9 +8,10 @@ export default function Header() {
   const location = useLocation();
 
   const navItems = [
-    { path: "/dashboard", label: "📋 QUESTS", emoji: "" },
-    { path: "/calendar", label: "📅 CALENDAR", emoji: "" },
-    { path: "/planner", label: "🗓️ PLANNER", emoji: "" },
+    { path: "/dashboard", label: "📋 QUESTS" },
+    { path: "/calendar", label: "📅 CALENDAR" },
+    { path: "/planner", label: "🗓️ PLANNER" },
+    { path: "/history", label: "📜 HISTORY" },
   ];
 
   return (
