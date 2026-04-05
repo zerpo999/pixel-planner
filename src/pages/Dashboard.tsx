@@ -1,109 +1,152 @@
-import { useState } from "react";
-import { useApp, Task } from "@/context/AppContext";
-import TaskCard from "@/components/TaskCard";
-import AddTaskForm from "@/components/AddTaskForm";
-import StreakBadge from "@/components/StreakBadge";
-import Notifications from "@/components/Notifications";
+import { useState, useMemo } from "react";
+import { useApp } from "@/context/AppContext";
+import Header from "@/components/Header";
+import TaskItem from "@/components/TaskItem";
+import AddEditTaskDialog from "@/components/AddEditTaskDialog";
+import { Task } from "@/types";
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function Dashboard() {
-  const { user, tasks, logout } = useApp();
-  const [showForm, setShowForm] = useState(false);
-  const [filter, setFilter] = useState<"all" | "active" | "done">("all");
+  const { user, tasks, streak } = useApp();
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const filtered = tasks
-    .filter((t) => {
-      if (filter === "active") return !t.completed;
-      if (filter === "done") return t.completed;
-      return true;
-    })
-    .sort((a, b) => {
-      if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
-    });
+  const today = new Date().toISOString().split("T")[0];
+  const weekFromNow = new Date();
+  weekFromNow.setDate(weekFromNow.getDate() + 7);
+  const weekEnd = weekFromNow.toISOString().split("T")[0];
+
+  const dueToday = useMemo(() => tasks.filter((t) => t.due_date === today && !t.completed), [tasks, today]);
+  const thisWeek = useMemo(
+    () => tasks.filter((t) => t.due_date > today && t.due_date <= weekEnd && !t.completed)
+      .sort((a, b) => a.due_date.localeCompare(b.due_date)),
+    [tasks, today, weekEnd]
+  );
+  const overdue = useMemo(() => tasks.filter((t) => t.due_date < today && !t.completed), [tasks, today]);
+
+  const streakAtRisk = streak.last_completed_date !== today;
+
+  const handleEdit = (task: Task) => {
+    setEditingTask(task);
+    setShowDialog(true);
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="pixel-border-lg bg-card p-3 sm:p-4 mx-2 sm:mx-4 mt-2 sm:mt-4 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-2xl">🎮</span>
-          <h1 className="font-pixel text-primary text-[8px] sm:text-[10px]">Study Quest</h1>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-muted-foreground text-sm sm:text-base">
-            👤 {user?.username}
-          </span>
-          <button
-            onClick={logout}
-            className="px-2 sm:px-3 py-1 bg-destructive text-destructive-foreground font-pixel text-[7px] sm:text-[8px] pixel-btn"
-          >
-            EXIT
-          </button>
-        </div>
-      </header>
+      <Header />
 
-      <div className="container mx-auto p-2 sm:p-4 max-w-4xl">
-        <Notifications />
+      <div className="container mx-auto p-3 sm:p-4 max-w-4xl">
+        {/* Greeting */}
+        <div className="mb-4">
+          <h2 className="font-pixel text-primary text-[10px] sm:text-xs">
+            {getGreeting()}, {user?.username}! 👋
+          </h2>
+        </div>
 
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
-          <StreakBadge />
-          <StatBox emoji="📋" label="Total" value={tasks.length} color="bg-sky" />
-          <StatBox emoji="✅" label="Done" value={tasks.filter((t) => t.completed).length} color="bg-mint" />
-          <StatBox emoji="⏰" label="Active" value={tasks.filter((t) => !t.completed).length} color="bg-peach" />
-        </div>
-
-        {/* Controls */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground font-pixel text-[8px] sm:text-[9px] pixel-btn"
-          >
-            {showForm ? "✕ CLOSE" : "＋ NEW QUEST"}
-          </button>
-          <div className="flex gap-1">
-            {(["all", "active", "done"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-2 sm:px-3 py-1 font-pixel text-[7px] sm:text-[8px] pixel-btn ${
-                  filter === f
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {f.toUpperCase()}
-              </button>
-            ))}
+          <div className={`pixel-border p-3 text-center ${streakAtRisk ? "bg-destructive/20" : "bg-secondary/20"}`}>
+            <span className="text-xl">🔥</span>
+            <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{streak.current}</p>
+            <p className="font-pixel text-[7px] text-muted-foreground">STREAK</p>
+            {streakAtRisk && (
+              <p className="font-pixel text-[6px] text-destructive animate-blink mt-1">AT RISK!</p>
+            )}
+          </div>
+          <div className="pixel-border bg-primary/10 p-3 text-center">
+            <span className="text-xl">📋</span>
+            <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{tasks.length}</p>
+            <p className="font-pixel text-[7px] text-muted-foreground">TOTAL</p>
+          </div>
+          <div className="pixel-border bg-secondary/20 p-3 text-center">
+            <span className="text-xl">✅</span>
+            <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{tasks.filter((t) => t.completed).length}</p>
+            <p className="font-pixel text-[7px] text-muted-foreground">DONE</p>
+          </div>
+          <div className={`pixel-border p-3 text-center ${overdue.length > 0 ? "bg-destructive/20" : "bg-accent/20"}`}>
+            <span className="text-xl">{overdue.length > 0 ? "⚠️" : "⏰"}</span>
+            <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">
+              {overdue.length > 0 ? overdue.length : tasks.filter((t) => !t.completed).length}
+            </p>
+            <p className="font-pixel text-[7px] text-muted-foreground">
+              {overdue.length > 0 ? "OVERDUE" : "ACTIVE"}
+            </p>
           </div>
         </div>
 
-        {showForm && <AddTaskForm onClose={() => setShowForm(false)} />}
+        {/* Add button */}
+        <button
+          onClick={() => { setEditingTask(null); setShowDialog(true); }}
+          className="mb-4 px-4 py-2 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
+        >
+          ✨ NEW QUEST
+        </button>
 
-        {/* Task list */}
-        <div className="space-y-2 sm:space-y-3">
-          {filtered.length === 0 ? (
-            <div className="pixel-border bg-card p-6 sm:p-8 text-center">
-              <span className="text-3xl sm:text-4xl block mb-3">🏰</span>
-              <p className="font-pixel text-muted-foreground text-[8px] sm:text-[9px] leading-relaxed">
-                No quests yet! Add one to start your adventure.
-              </p>
+        {/* Due Today */}
+        <section className="mb-6">
+          <h3 className="font-pixel text-[9px] text-foreground mb-2">📌 DUE TODAY</h3>
+          {dueToday.length === 0 ? (
+            <div className="pixel-border bg-card p-4 text-center">
+              <p className="font-pixel text-[8px] text-muted-foreground">No quests due today! 🎉</p>
             </div>
           ) : (
-            filtered.map((task) => <TaskCard key={task.id} task={task} />)
+            <div className="space-y-2">
+              {dueToday.map((t) => <TaskItem key={t.id} task={t} onEdit={handleEdit} />)}
+            </div>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
+        </section>
 
-function StatBox({ emoji, label, value, color }: { emoji: string; label: string; value: number; color: string }) {
-  return (
-    <div className={`pixel-border ${color} bg-opacity-30 p-2 sm:p-3 text-center`}>
-      <span className="text-lg sm:text-xl">{emoji}</span>
-      <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{value}</p>
-      <p className="font-pixel text-[7px] text-muted-foreground">{label}</p>
+        {/* This Week */}
+        <section className="mb-6">
+          <h3 className="font-pixel text-[9px] text-foreground mb-2">📅 THIS WEEK</h3>
+          {thisWeek.length === 0 ? (
+            <div className="pixel-border bg-card p-4 text-center">
+              <p className="font-pixel text-[8px] text-muted-foreground">All clear for this week! 🏖️</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {thisWeek.map((t) => <TaskItem key={t.id} task={t} onEdit={handleEdit} />)}
+            </div>
+          )}
+        </section>
+
+        {/* Progress Summary */}
+        <section className="pixel-border-lg bg-card p-4 sm:p-5">
+          <h3 className="font-pixel text-[9px] text-primary mb-3">🏆 PROGRESS SUMMARY</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-pixel-body text-lg">
+            <div>
+              <p className="font-pixel text-[7px] text-muted-foreground mb-1">Overdue</p>
+              <p className={`text-xl ${overdue.length > 0 ? "text-destructive" : "text-foreground"}`}>
+                {overdue.length}
+              </p>
+            </div>
+            <div>
+              <p className="font-pixel text-[7px] text-muted-foreground mb-1">Longest Streak</p>
+              <p className="text-xl text-foreground">🔥 {streak.longest}</p>
+            </div>
+            <div>
+              <p className="font-pixel text-[7px] text-muted-foreground mb-1">Current Streak</p>
+              <p className="text-xl text-foreground">🔥 {streak.current}</p>
+            </div>
+            <div>
+              <p className="font-pixel text-[7px] text-muted-foreground mb-1">Last Completed</p>
+              <p className="text-xl text-foreground">{streak.last_completed_date || "—"}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <AddEditTaskDialog
+        open={showDialog}
+        onClose={() => setShowDialog(false)}
+        editTask={editingTask}
+      />
     </div>
   );
 }

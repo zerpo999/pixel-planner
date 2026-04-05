@@ -1,37 +1,23 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-
-export interface User {
-  id: string;
-  username: string;
-  token: string;
-}
-
-export interface Task {
-  id: string;
-  title: string;
-  due_date: string;
-  priority: "low" | "medium" | "high";
-  completed: boolean;
-  created_at: string;
-  completed_at?: string;
-}
-
-export interface Streak {
-  current: number;
-  last_completed_date: string | null;
-}
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
+import { User, Task, Streak } from "@/types";
+import {
+  apiRegister, apiLogin, apiLogout, apiGetTasks, apiCreateTask,
+  apiUpdateTask, apiDeleteTask, apiCompleteTask, apiGetStreak,
+} from "@/services/api";
 
 interface AppContextType {
   user: User | null;
   tasks: Task[];
   streak: Streak;
-  login: (username: string, password: string) => boolean;
-  register: (username: string, password: string) => boolean;
+  loading: boolean;
+  login: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  addTask: (title: string, due_date: string, priority: Task["priority"]) => void;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  completeTask: (id: string) => void;
+  addTask: (task: Omit<Task, "id" | "completed" | "created_at">) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  completeTask: (id: string) => Promise<void>;
+  refreshTasks: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -42,114 +28,86 @@ export function useApp() {
   return ctx;
 }
 
-function getStoredUsers(): Record<string, { password: string; id: string }> {
-  return JSON.parse(localStorage.getItem("sp_users") || "{}");
-}
-
-function getStoredTasks(userId: string): Task[] {
-  return JSON.parse(localStorage.getItem(`sp_tasks_${userId}`) || "[]");
-}
-
-function getStoredStreak(userId: string): Streak {
-  return JSON.parse(localStorage.getItem(`sp_streak_${userId}`) || '{"current":0,"last_completed_date":null}');
-}
-
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("sp_current_user");
+    const saved = localStorage.getItem("sq_current_user");
     return saved ? JSON.parse(saved) : null;
   });
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [streak, setStreak] = useState<Streak>({ current: 0, last_completed_date: null });
+  const [streak, setStreak] = useState<Streak>({ current: 0, longest: 0, last_completed_date: null });
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      setTasks(getStoredTasks(user.id));
-      setStreak(getStoredStreak(user.id));
+  const refreshTasks = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [t, s] = await Promise.all([apiGetTasks(user.id), apiGetStreak(user.id)]);
+      setTasks(t);
+      setStreak(s);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(`sp_tasks_${user.id}`, JSON.stringify(tasks));
-    }
-  }, [tasks, user]);
+    if (user) refreshTasks();
+  }, [user, refreshTasks]);
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(`sp_streak_${user.id}`, JSON.stringify(streak));
+  const register = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const u = await apiRegister(username, password);
+      setUser(u);
+      return true;
+    } catch {
+      return false;
     }
-  }, [streak, user]);
-
-  const register = (username: string, password: string): boolean => {
-    const users = getStoredUsers();
-    if (users[username]) return false;
-    const id = crypto.randomUUID();
-    users[username] = { password, id };
-    localStorage.setItem("sp_users", JSON.stringify(users));
-    const u = { id, username, token: `token_${id}` };
-    setUser(u);
-    localStorage.setItem("sp_current_user", JSON.stringify(u));
-    return true;
   };
 
-  const login = (username: string, password: string): boolean => {
-    const users = getStoredUsers();
-    const entry = users[username];
-    if (!entry || entry.password !== password) return false;
-    const u = { id: entry.id, username, token: `token_${entry.id}` };
-    setUser(u);
-    localStorage.setItem("sp_current_user", JSON.stringify(u));
-    return true;
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const u = await apiLogin(username, password);
+      setUser(u);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const logout = () => {
+    apiLogout();
     setUser(null);
     setTasks([]);
-    setStreak({ current: 0, last_completed_date: null });
-    localStorage.removeItem("sp_current_user");
+    setStreak({ current: 0, longest: 0, last_completed_date: null });
   };
 
-  const addTask = (title: string, due_date: string, priority: Task["priority"]) => {
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title,
-      due_date,
-      priority,
-      completed: false,
-      created_at: new Date().toISOString(),
-    };
-    setTasks((prev) => [...prev, task]);
+  const addTask = async (task: Omit<Task, "id" | "completed" | "created_at">) => {
+    if (!user) return;
+    await apiCreateTask(user.id, task);
+    await refreshTasks();
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    if (!user) return;
+    await apiUpdateTask(user.id, id, updates);
+    await refreshTasks();
   };
 
-  const deleteTask = (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const deleteTask = async (id: string) => {
+    if (!user) return;
+    await apiDeleteTask(user.id, id);
+    await refreshTasks();
   };
 
-  const completeTask = (id: string) => {
-    const today = new Date().toISOString().split("T")[0];
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id ? { ...t, completed: true, completed_at: new Date().toISOString() } : t
-      )
-    );
-    setStreak((prev) => {
-      if (prev.last_completed_date === today) return prev;
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-      const newCurrent = prev.last_completed_date === yesterdayStr ? prev.current + 1 : 1;
-      return { current: newCurrent, last_completed_date: today };
-    });
+  const completeTask = async (id: string) => {
+    if (!user) return;
+    const result = await apiCompleteTask(user.id, id);
+    setStreak(result.streak);
+    await refreshTasks();
   };
 
   return (
     <AppContext.Provider
-      value={{ user, tasks, streak, login, register, logout, addTask, updateTask, deleteTask, completeTask }}
+      value={{ user, tasks, streak, loading, login, register, logout, addTask, updateTask, deleteTask, completeTask, refreshTasks }}
     >
       {children}
     </AppContext.Provider>
