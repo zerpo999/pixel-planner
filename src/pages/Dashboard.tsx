@@ -131,7 +131,7 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Current Streak</p>
-              <p className="text-xl text-foreground"> <img src="/fire.png" alt="Fire" className="h-10 w-10 text-center" /> {streak.current}</p>
+              <p className="text-xl text-foreground justify-center"> <img src="/fire.png" alt="Fire" className="h-10 w-10 text-center justify-center" /> {streak.current}</p>
             </div>
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Last Completed</p>
