@@ -1,8 +1,22 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+  useCallback,
+} from "react";
 import { User, Task, Streak } from "@/types";
 import {
-  apiRegister, apiLogin, apiLogout, apiGetTasks, apiCreateTask,
-  apiUpdateTask, apiDeleteTask, apiCompleteTask, apiGetStreak,
+  apiRegister,
+  apiLogin,
+  apiLogout,
+  apiGetTasks,
+  apiCreateTask,
+  apiUpdateTask,
+  apiDeleteTask,
+  apiCompleteTask,
+  apiGetStreak,
 } from "@/services/api";
 
 interface AppContextType {
@@ -10,10 +24,20 @@ interface AppContextType {
   tasks: Task[];
   streak: Streak;
   loading: boolean;
+  categories: string[];
+  addCategory: (name: string) => void;
+
   login: (username: string, password: string) => Promise<boolean>;
-  register: (username: string, password: string, fullName: string) => Promise<boolean>;
+  register: (
+    username: string,
+    password: string,
+    fullName: string
+  ) => Promise<boolean>;
   logout: () => void;
-  addTask: (task: Omit<Task, "id" | "completed" | "created_at">) => Promise<void>;
+
+  addTask: (
+    task: Omit<Task, "id" | "completed" | "created_at">
+  ) => Promise<void>;
   updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   completeTask: (id: string) => Promise<void>;
@@ -33,15 +57,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem("sq_current_user");
     return saved ? JSON.parse(saved) : null;
   });
+
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [streak, setStreak] = useState<Streak>({ current: 0, longest: 0, last_completed_date: null });
+  const [streak, setStreak] = useState<Streak>({
+    current: 0,
+    longest: 0,
+    last_completed_date: null,
+  });
   const [loading, setLoading] = useState(false);
+
+  // ⭐ NEW: Persistent categories
+  const [categories, setCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem("sq_categories");
+    return saved
+      ? JSON.parse(saved)
+      : ["Study", "Homework", "Project", "Reading", "Review"];
+  });
+
+  const addCategory = (name: string) => {
+    setCategories((prev) => {
+      if (prev.includes(name)) return prev;
+      const updated = [...prev, name];
+      localStorage.setItem("sq_categories", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const refreshTasks = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [t, s] = await Promise.all([apiGetTasks(user.id), apiGetStreak(user.id)]);
+      const [t, s] = await Promise.all([
+        apiGetTasks(user.id),
+        apiGetStreak(user.id),
+      ]);
       setTasks(t);
       setStreak(s);
     } finally {
@@ -53,7 +102,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (user) refreshTasks();
   }, [user, refreshTasks]);
 
-  const register = async (username: string, password: string, fullName: string): Promise<boolean> => {
+  const register = async (
+    username: string,
+    password: string,
+    fullName: string
+  ): Promise<boolean> => {
     try {
       const u = await apiRegister(username, password, fullName);
       setUser(u);
@@ -63,7 +116,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<boolean> => {
     try {
       const u = await apiLogin(username, password);
       setUser(u);
@@ -77,10 +133,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     apiLogout();
     setUser(null);
     setTasks([]);
-    setStreak({ current: 0, longest: 0, last_completed_date: null });
+    setStreak({
+      current: 0,
+      longest: 0,
+      last_completed_date: null,
+    });
   };
 
-  const addTask = async (task: Omit<Task, "id" | "completed" | "created_at">) => {
+  const addTask = async (
+    task: Omit<Task, "id" | "completed" | "created_at">
+  ) => {
     if (!user) return;
     await apiCreateTask(user.id, task);
     await refreshTasks();
@@ -107,7 +169,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppContext.Provider
-      value={{ user, tasks, streak, loading, login, register, logout, addTask, updateTask, deleteTask, completeTask, refreshTasks }}
+      value={{
+        user,
+        tasks,
+        streak,
+        loading,
+        login,
+        register,
+        logout,
+        addTask,
+        updateTask,
+        deleteTask,
+        completeTask,
+        refreshTasks,
+        categories,
+        addCategory,
+      }}
     >
       {children}
     </AppContext.Provider>

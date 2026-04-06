@@ -8,15 +8,28 @@ interface Props {
   editTask?: Task | null;
 }
 
-const CATEGORIES = ["Study", "Homework", "Project", "Reading", "Review"];
-const COLORS = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#74c0fc", "#b197fc", "#f783ac"];
+const COLORS = [
+  "#ff6b6b",
+  "#ffa94d",
+  "#ffd43b",
+  "#69db7c",
+  "#74c0fc",
+  "#b197fc",
+  "#f783ac",
+];
 
 export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
-  const { addTask, updateTask, deleteTask } = useApp();
+  const {
+    addTask,
+    updateTask,
+    deleteTask,
+    categories,
+    addCategory,
+  } = useApp();
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Study");
-  const [customCategory, setCustomCategory] = useState(""); // NEW
+  const [customCategory, setCustomCategory] = useState("");
   const [color, setColor] = useState(COLORS[0]);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<Task["priority"]>("medium");
@@ -26,7 +39,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     if (editTask) {
       setTitle(editTask.title);
       setCategory(editTask.category);
-      setCustomCategory(""); // reset custom field
+      setCustomCategory("");
       setColor(editTask.color);
       setDueDate(editTask.due_date);
       setPriority(editTask.priority);
@@ -50,7 +63,12 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     const finalCategory =
       category === "__custom" ? customCategory.trim() : category;
 
-    if (!finalCategory) return; // prevent empty custom category
+    if (!finalCategory) return;
+
+    // Save custom category globally
+    if (category === "__custom") {
+      addCategory(finalCategory);
+    }
 
     if (editTask) {
       await updateTask(editTask.id, {
@@ -85,14 +103,14 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="w-full max-w-md pixel-border-lg bg-card p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
         <h2 className="font-pixel text-primary text-[10px] sm:text-xs mb-5">
-          {editTask ? "✏️ EDIT TASK" : "✨ NEW TASK"}
+          {editTask ? "EDIT TASK" : "NEW TASK"}
         </h2>
 
         <div className="space-y-4">
           {/* Title */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              📝 Task Name
+              Task Name
             </label>
             <input
               value={title}
@@ -105,7 +123,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
           {/* Category */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              📂 Category
+              Category
             </label>
 
             <select
@@ -113,7 +131,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none"
             >
-              {CATEGORIES.map((c) => (
+              {categories.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
@@ -135,7 +153,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
           {/* Color */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              🎨 Label
+              Label
             </label>
             <div className="flex gap-2 flex-wrap">
               {COLORS.map((c) => (
@@ -160,7 +178,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
           {/* Due Date */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              📅 Due Date
+              Due Date
             </label>
             <input
               type="date"
@@ -173,7 +191,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
           {/* Priority */}
           <div>
             <label className="font-pixel text-[8px] text-foreground block mb-1">
-              ⚡ Priority
+              Priority
             </label>
             <div className="flex gap-2">
               {(["low", "medium", "high"] as const).map((p) => (
@@ -196,7 +214,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
             </div>
           </div>
 
-          {/* Completed checkbox (edit only) */}
+          {/* Completed checkbox */}
           {editTask && (
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -206,7 +224,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
                 className="w-5 h-5 accent-primary"
               />
               <span className="font-pixel text-[8px] text-foreground">
-                ✅ Completed
+                Completed
               </span>
             </label>
           )}
@@ -219,7 +237,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
               onClick={handleDelete}
               className="px-4 py-2 bg-destructive text-destructive-foreground font-pixel text-[8px] pixel-btn"
             >
-              🗑️ DELETE
+              DELETE
             </button>
           )}
           <div className="flex-1" />
@@ -233,7 +251,7 @@ export default function AddEditTaskDialog({ open, onClose, editTask }: Props) {
             onClick={handleSubmit}
             className="px-4 py-2 bg-primary text-primary-foreground font-pixel text-[8px] pixel-btn"
           >
-            {editTask ? "💾 SAVE" : "✨ ADD"}
+            {editTask ? "SAVE" : "ADD"}
           </button>
         </div>
       </div>

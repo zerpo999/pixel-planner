@@ -1,5 +1,6 @@
 import { Task } from "@/types";
 import { useApp } from "@/context/AppContext";
+import { Checkbox, CheckboxOn, WarningDiamond } from 'pixelarticons/react';
 
 interface Props {
   task: Task;
@@ -13,37 +14,60 @@ const priorityStyles: Record<string, string> = {
 };
 
 export default function TaskItem({ task, onEdit }: Props) {
-  const { completeTask } = useApp();
+  const { updateTask } = useApp(); // ← FIXED
 
-  const isOverdue = !task.completed && new Date(task.due_date) < new Date(new Date().toISOString().split("T")[0]);
+  const isOverdue =
+    !task.completed &&
+    new Date(task.due_date) < new Date(new Date().toISOString().split("T")[0]);
 
   return (
     <div
-      className={`pixel-border bg-card p-3 flex items-center gap-3 border-l-4 ${priorityStyles[task.priority]} ${
-        task.completed ? "opacity-60" : ""
-      }`}
+      className={`pixel-border bg-card p-3 flex items-center gap-3 border-l-4 ${
+        priorityStyles[task.priority]
+      } ${task.completed ? "opacity-60" : ""}`}
       style={{ borderLeftColor: task.color }}
     >
+      {/* Checkbox — FIXED */}
       <button
-        onClick={() => !task.completed && completeTask(task.id)}
-        disabled={task.completed}
-        className={`w-6 h-6 pixel-border flex-shrink-0 flex items-center justify-center text-sm ${
-          task.completed ? "bg-secondary" : "bg-muted hover:bg-primary/20"
-        }`}
+        onClick={() => updateTask(task.id, { completed: !task.completed })}
+        className={"flex items-center justify-center text-xs"}
       >
-        {task.completed ? "✓" : ""}
+        {task.completed ? <CheckboxOn /> : <Checkbox />}
       </button>
 
       <div className="flex-1 min-w-0">
-        <p className={`font-pixel-body text-lg text-foreground truncate ${task.completed ? "line-through" : ""}`}>
+        <p
+          className={`font-pixel-body text-lg text-foreground truncate ${
+            task.completed ? "line-through" : ""
+          }`}
+        >
           {task.title}
         </p>
+
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className="font-pixel text-[7px] text-muted-foreground">{task.category}</span>
-          <span className={`font-pixel text-[7px] ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
-            📅 {task.due_date}
+          <span className="font-pixel text-[7px] text-muted-foreground">
+            {task.category}
           </span>
-          {isOverdue && <span className="font-pixel text-[7px] text-destructive animate-blink">⚠️ OVERDUE</span>}
+          <span> | </span>
+
+          <span
+            className={`font-pixel text-[7px] ${
+              isOverdue ? "text-destructive" : "text-muted-foreground"
+            }`}
+          >
+           Due: {task.due_date}
+          </span>
+
+          {isOverdue && (
+            <>
+            <span className="font-pixel text-[7px] text-destructive">
+               OVERDUE
+            </span>
+             <span className="text-destructive">
+              <WarningDiamond/> 
+            </span>
+            </>
+          )}
         </div>
       </div>
 

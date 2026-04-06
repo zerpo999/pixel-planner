@@ -9,9 +9,9 @@ export default function Header() {
 
   const navItems = [
     { path: "/dashboard", label: "HOME" },
+    { path: "/history", label: "TASK LIST" },
     { path: "/calendar", label: "CALENDAR" },
     { path: "/planner", label: "PLANNER" },
-    { path: "/history", label: "HISTORY" },
   ];
 
   return (
@@ -21,7 +21,7 @@ export default function Header() {
           <span className="text-2xl cursor-pointer" onClick={() => navigate("/dashboard")}>
             <img src="logo.png" alt="Logo" className="w-8 h-8" />
           </span>
-          <h1 className="font-pixel text-primary text-[8px] sm:text-[10px] hidden sm:block">Pixel Planner </h1>
+          <h1 className="font-pixel text-primary text-[12px] sm:text-[12px] hidden sm:block">Pixel Planner </h1>
         </div>
 
         {user && (

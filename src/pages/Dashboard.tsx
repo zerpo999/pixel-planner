@@ -13,7 +13,7 @@ function getGreeting(): string {
 }
 
 export default function Dashboard() {
-  const { user, tasks, streak } = useApp();
+  const { user, tasks, streak, updateTask} = useApp();
   const [showDialog, setShowDialog] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
@@ -49,15 +49,21 @@ export default function Dashboard() {
           </h2>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
-          <div className={`pixel-border p-3 text-center ${streakAtRisk ? "bg-destructive/20" : "bg-secondary/20"}`}>
-            <span className="text-xl">🔥</span>
-            <p className="font-pixel text-foreground text-sm sm:text-lg mt-1">{streak.current}</p>
-            <p className="font-pixel text-[7px] text-muted-foreground">STREAK</p>
-            {streakAtRisk && (
-              <p className="font-pixel text-[6px] text-destructive ">AT RISK!</p>
-            )}
+        {/* Stats row and add button box */}
+        <div className="flex items-center justify-between w-full">
+            <button
+            onClick={() => { setEditingTask(null); setShowDialog(true); }}
+            className="pixel-border flex items-center gap-2 px-3 py-0.5 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
+          >
+            <img src="/plus.png" alt="add" className="h-8 w-8" /> NEW TASK
+          </button>
+          <div className={`pixel-border flex items-center gap-2 px-2 py-1 ${streakAtRisk ? "bg-destructive/20" : "bg-secondary/20"}`}>
+              <img src="/fire.png" alt="Fire" className="h-8 w-8" />
+              <span className="font-pixel text-[10px] text-muted-foreground">STREAK: </span>
+              <span className="font-pixel text-[12px] text-foreground">{streak.current}</span>
+              {streakAtRisk && (
+                <p className="font-pixel text-[6px] text-destructive ">AT RISK!</p>
+              )}
           </div>
           {/* <div className="pixel-border bg-primary/10 p-3 text-center">
             <span className="text-xl">📋</span>
@@ -79,14 +85,7 @@ export default function Dashboard() {
             </p>
           </div> */}
         </div>
-
-        {/* Add button */}
-        <button
-          onClick={() => { setEditingTask(null); setShowDialog(true); }}
-          className="mb-4 px-4 py-2 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
-        >
-          ✨ NEW TASK
-        </button>
+        <br />
 
         {/* Due Today */}
         <section className="mb-6">
@@ -128,11 +127,11 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Longest Streak</p>
-              <p className="text-xl text-foreground">🔥 {streak.longest}</p>
+              <p className="text-xl text-foreground"> <img src="/fire.png" alt="Fire" className="h-10 w-10 text-center" /> {streak.longest}</p>
             </div>
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Current Streak</p>
-              <p className="text-xl text-foreground">🔥 {streak.current}</p>
+              <p className="text-xl text-foreground"> <img src="/fire.png" alt="Fire" className="h-10 w-10 text-center" /> {streak.current}</p>
             </div>
             <div>
               <p className="font-pixel text-[7px] text-muted-foreground mb-1">Last Completed</p>
