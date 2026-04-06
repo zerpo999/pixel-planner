@@ -1,5 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun } from "lucide-react";
+import{ Moon, Lightbulb } from 'pixelarticons/react';
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -11,12 +11,12 @@ export default function ThemeToggle() {
 >
   {theme === "dark" ? (
     <>
-      <img src="/sun.png" alt="Day" className="h-3 w-3" />
+      <Lightbulb className="h-3 w-3" />
       DAY
     </>
   ) : (
     <>
-      <img src="/moon.png" alt="Night" className="h-3 w-3" />
+      <Moon className="h-3 w-3" />
       NIGHT
     </>
   )}
