@@ -73,13 +73,9 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md pixel-border-lg bg-card p-6 sm:p-8">
           <div className="text-center mb-8">
-            <span className="text-3xl sm:text-4xl">🎮</span>
             <h1 className="font-pixel text-primary text-xs sm:text-sm mt-4 leading-relaxed">
-              {isLogin ? "Welcome Back!" : "Join the Quest!"}
+              {isLogin ? "Welcome Back!" : "Create Account"}
             </h1>
-            <p className="text-muted-foreground text-lg mt-2 font-pixel-body">
-              {isLogin ? "Enter your credentials to continue" : "Create your hero account"}
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -96,23 +92,23 @@ export default function AuthPage() {
               </div>
             )}
             <div>
-              <label className="font-pixel text-[10px] text-foreground block mb-2">👤 Username</label>
+              <label className="font-pixel text-[10px] text-foreground block mb-2">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
-                placeholder="hero_name"
+                placeholder="user_name"
               />
             </div>
             <div>
-              <label className="font-pixel text-[10px] text-foreground block mb-2">🔑 Password</label>
+              <label className="font-pixel text-[10px] text-foreground block mb-2">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
-                placeholder="••••••••"
+                placeholder="password123!"
               />
               {!isLogin && (
                 <div className="mt-2 space-y-1">
@@ -152,7 +148,7 @@ export default function AuthPage() {
             onClick={() => { setIsLogin(!isLogin); setErrors([]); setFullName(""); }}
             className="w-full mt-4 text-center text-muted-foreground font-pixel text-[8px] hover:text-primary transition-colors"
           >
-            {isLogin ? "New player? SIGN UP" : "Returning? LOG IN"}
+            {isLogin ? "New user? SIGN UP" : "Returning? LOG IN"}
           </button>
         </div>
       </div>

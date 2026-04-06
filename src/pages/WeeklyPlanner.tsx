@@ -3,6 +3,7 @@ import { useApp } from "@/context/AppContext";
 import Header from "@/components/Header";
 import AddEditTaskDialog from "@/components/AddEditTaskDialog";
 import { Task } from "@/types";
+import { Checkbox, CheckboxOn } from 'pixelarticons/react'
 
 function getWeekDates(offset: number): { date: Date; dateStr: string; label: string }[] {
   const today = new Date();
@@ -48,7 +49,7 @@ export default function WeeklyPlanner() {
             ◀ PREV
           </button>
           <h2 className="font-pixel text-primary text-[10px] sm:text-xs">
-            🗓️ WEEKLY PLANNER {weekOffset === 0 ? "(THIS WEEK)" : ""}
+            WEEKLY PLANNER {weekOffset === 0 ? "(THIS WEEK)" : ""}
           </h2>
           <button onClick={() => setWeekOffset((w) => w + 1)} className="px-3 py-1 font-pixel text-[9px] pixel-btn bg-muted text-foreground">
             NEXT ▶
@@ -57,10 +58,11 @@ export default function WeeklyPlanner() {
 
         <button
           onClick={() => { setEditingTask(null); setShowDialog(true); }}
-          className="mb-4 px-4 py-2 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
+          className="flex items-center gap-2 px-2 py-0.5 bg-primary text-primary-foreground font-pixel text-[9px] pixel-btn"
         >
-          ✨ NEW QUEST
+          <img src="/plus.png" alt="add" className="h-8 w-8" /> NEW TASK
         </button>
+        <br />
 
         {/* Week grid */}
         <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
@@ -96,7 +98,7 @@ export default function WeeklyPlanner() {
                             onClick={() => !t.completed && completeTask(t.id)}
                             className="text-xs flex-shrink-0"
                           >
-                            {t.completed ? "✅" : "⬜"}
+                            {t.completed ? <CheckboxOn /> : <Checkbox/>}
                           </button>
                           <span
                             className="truncate cursor-pointer hover:underline"
