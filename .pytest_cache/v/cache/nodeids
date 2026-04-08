@@ -1,0 +1,6 @@
+[
+  "backend/tests/test_auth_basic.py::test_auth_status",
+  "backend/tests/test_main.py::test_root",
+  "backend/tests/test_tasks_basic.py::test_create_task",
+  "backend/tests/test_tasks_basic.py::test_list_tasks"
+]
