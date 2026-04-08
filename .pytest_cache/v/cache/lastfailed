@@ -1,0 +1,5 @@
+{
+  "backend/tests/test_auth_basic.py::TestClient": true,
+  "backend/tests/test_main.py::TestClient": true,
+  "backend/tests/test_tasks_basic.py::TestClient": true
+}
