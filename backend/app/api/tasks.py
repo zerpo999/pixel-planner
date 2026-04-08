@@ -55,3 +55,4 @@ def get_streak(db: Session = Depends(dependencies.get_db), current_user = Depend
     if not streak:
         streak = crud.update_streak(db, current_user.id)
     return streak
+
