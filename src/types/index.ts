@@ -8,6 +8,7 @@ export interface User {
 export interface Task {
   id: string;
   title: string;
+  description: string;
   category: string;
   color: string;
   due_date: string;
