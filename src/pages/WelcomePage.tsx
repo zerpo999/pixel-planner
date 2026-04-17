@@ -48,12 +48,10 @@ export default function WelcomePage() {
             </div>
           </div>
 
-          {/* Right side - placeholder for demo image */}
+          {/* Right side demo image */}
           <div className="hidden md:flex items-center justify-center">
-            <div className="pixel-border-lg bg-card p-8 w-full max-w-sm aspect-square flex flex-col items-center justify-center">
-              <p className="font-pixel text-[8px] text-muted-foreground text-center leading-relaxed">
-                PLACEHOLDER
-              </p>
+            <div>
+              <img src="/demo.png" alt="Pixel Planner Demo" className="w-full h-full object-contain border pixel-border rounded-lg" />
             </div>
           </div>
         </div>
