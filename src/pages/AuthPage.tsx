@@ -12,6 +12,7 @@ export default function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);  // ← NEW
 
   const validatePassword = (pw: string): string[] => {
     const errs: string[] = [];
@@ -23,6 +24,7 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;  // ← prevent double submission
     setErrors([]);
 
     if (!username.trim()) {
@@ -42,20 +44,31 @@ export default function AuthPage() {
       }
     }
 
-    if (isLogin) {
-      const ok = await login(username, password);
-      if (!ok) {
-        setErrors(["Invalid credentials!"]);
-        return;
+    setIsSubmitting(true);  // ← disable button
+
+    try {
+      if (isLogin) {
+        const ok = await login(username, password);
+        if (!ok) {
+          setErrors(["Invalid credentials!"]);
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        const ok = await register(username, password, fullName);
+        if (!ok) {
+          // The error might be more specific; but keep generic for now
+          setErrors(["Registration failed. Username may be taken or password invalid."]);
+          setIsSubmitting(false);
+          return;
+        }
       }
-    } else {
-      const ok = await register(username, password, fullName);
-      if (!ok) {
-        setErrors(["Username already taken!"]);
-        return;
-      }
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setErrors(["An unexpected error occurred. Please try again."]);
+      setIsSubmitting(false);
     }
-    navigate("/dashboard");
   };
 
   return (
@@ -88,6 +101,7 @@ export default function AuthPage() {
                   onChange={(e) => setFullName(e.target.value)}
                   className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
                   placeholder="Your Name"
+                  disabled={isSubmitting}
                 />
               </div>
             )}
@@ -99,6 +113,7 @@ export default function AuthPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
                 placeholder="user_name"
+                disabled={isSubmitting}
               />
             </div>
             <div>
@@ -109,6 +124,7 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 bg-muted text-foreground pixel-border text-lg font-pixel-body outline-none focus:border-primary"
                 placeholder="password123!"
+                disabled={isSubmitting}
               />
               {!isLogin && (
                 <div className="mt-2 space-y-1">
@@ -138,15 +154,17 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-primary text-primary-foreground font-pixel text-[10px] pixel-btn"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-primary text-primary-foreground font-pixel text-[10px] pixel-btn disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLogin ? "▶ LOG IN" : "▶ SIGN UP"}
+              {isSubmitting ? "⏳ PROCESSING..." : (isLogin ? "▶ LOG IN" : "▶ SIGN UP")}
             </button>
           </form>
 
           <button
             onClick={() => { setIsLogin(!isLogin); setErrors([]); setFullName(""); }}
             className="w-full mt-4 text-center text-muted-foreground font-pixel text-[8px] hover:text-primary transition-colors"
+            disabled={isSubmitting}
           >
             {isLogin ? "New user? SIGN UP" : "Returning? LOG IN"}
           </button>

@@ -1,6 +1,6 @@
 import { Task, User, Streak } from "@/types";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://pixel-planner-backend-213965080353.us-central1.run.app";
 
 // ------------------------------
 // Token & auth helpers
@@ -62,6 +62,11 @@ function mapUserForFrontend(user: any, token: string): User {
 }
 
 // ------------------------------
+// Registration deduplication
+// ------------------------------
+let activeRegistrationPromise: Promise<User> | null = null;
+
+// ------------------------------
 // AUTH ENDPOINTS
 // ------------------------------
 export async function apiRegister(
@@ -69,42 +74,64 @@ export async function apiRegister(
   password: string,
   fullName: string
 ): Promise<User> {
-  const registerRes = await fetch(`${API_BASE}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username,
-      password,
-      full_name: fullName,
-      email: null,
-    }),
-  });
-
-  if (!registerRes.ok) {
-    await parseError(registerRes, "Registration failed");
+  // Prevent concurrent registration calls
+  if (activeRegistrationPromise) {
+    console.warn("⚠️ Registration already in progress, returning existing promise");
+    return activeRegistrationPromise;
   }
 
-  const createdUser = await registerRes.json();
+  activeRegistrationPromise = (async () => {
+    console.log("🔵 apiRegister called with:", { username, fullName });
 
-  // Auto-login after registration
-  const loginRes = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ username, password }),
-  });
+    const registerRes = await fetch(`${API_BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username,
+        password,
+        full_name: fullName,
+        email: null,
+      }),
+    });
 
-  if (!loginRes.ok) {
-    await parseError(loginRes, "Auto-login failed");
+    if (!registerRes.ok) {
+      const errorText = await registerRes.text();
+      console.error("🔴 Registration failed:", errorText);
+      await parseError(registerRes, "Registration failed");
+    }
+
+    const createdUser = await registerRes.json();
+    console.log("🟢 Registration succeeded:", createdUser);
+
+    // Auto-login after registration
+    const loginRes = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username, password }),
+    });
+
+    if (!loginRes.ok) {
+      console.error("🔴 Auto-login failed after registration");
+      await parseError(loginRes, "Auto-login failed");
+    }
+
+    const tokenData = await loginRes.json();
+    setToken(tokenData.access_token);
+
+    const user = mapUserForFrontend(createdUser, tokenData.access_token);
+    console.log("✅ Returning user from apiRegister:", user);
+    return user;
+  })();
+
+  try {
+    return await activeRegistrationPromise;
+  } finally {
+    activeRegistrationPromise = null;
   }
-
-  const tokenData = await loginRes.json();
-  setToken(tokenData.access_token);
-
-  const user = mapUserForFrontend(createdUser, tokenData.access_token);
-  return user;
 }
 
 export async function apiLogin(username: string, password: string): Promise<User> {
+  console.log("🔵 apiLogin called with:", { username });
   const loginRes = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -141,6 +168,7 @@ export async function apiLogin(username: string, password: string): Promise<User
       token: tokenData.access_token,
     };
   }
+  console.log("✅ Login successful, user:", user);
   return user;
 }
 
