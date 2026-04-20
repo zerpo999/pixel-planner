@@ -28,3 +28,9 @@ dist-ssr
 *.msi
 *.dmg
 .env
+
+# Python virtual environment
+venv/
+backend/venv/
+__pycache__/
+*.pyc.pytest_cache/ 

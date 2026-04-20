@@ -22,13 +22,13 @@ export default function Dashboard() {
   weekFromNow.setDate(weekFromNow.getDate() + 7);
   const weekEnd = weekFromNow.toISOString().split("T")[0];
 
-  const dueToday = useMemo(() => tasks.filter((t) => t.due_date === today && !t.completed), [tasks, today]);
+  const dueToday = useMemo(() => tasks.filter((t) => t.due_date === today), [tasks, today]);
   const thisWeek = useMemo(
-    () => tasks.filter((t) => t.due_date > today && t.due_date <= weekEnd && !t.completed)
+    () => tasks.filter((t) => t.due_date > today && t.due_date <= weekEnd)
       .sort((a, b) => a.due_date.localeCompare(b.due_date)),
     [tasks, today, weekEnd]
   );
-  const overdue = useMemo(() => tasks.filter((t) => t.due_date < today && !t.completed), [tasks, today]);
+  const overdue = useMemo(() => tasks.filter((t) => t.due_date < today), [tasks, today]);
 
   const streakAtRisk = streak.last_completed_date !== today;
 

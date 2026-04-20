@@ -141,3 +141,8 @@
     box-shadow: none;
   }
 }
+
+.task-item.completed {
+  text-decoration: line-through;
+  opacity: 0.6;
+}

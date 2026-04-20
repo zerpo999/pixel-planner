@@ -11,6 +11,7 @@ import {
   apiRegister,
   apiLogin,
   apiLogout,
+  apiGetCurrentUser,
   apiGetTasks,
   apiCreateTask,
   apiUpdateTask,
@@ -53,10 +54,8 @@ export function useApp() {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("sq_current_user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("access_token"));
+  const [user, setUser] = useState<User | null>(null);
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [streak, setStreak] = useState<Streak>({
@@ -83,13 +82,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // Fetch user when token exists
+  useEffect(() => {
+    if (token && !user) {
+      apiGetCurrentUser().then(setUser).catch(() => {
+        setToken(null);
+        localStorage.removeItem("access_token");
+      });
+    }
+  }, [token, user]);
+
   const refreshTasks = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
       const [t, s] = await Promise.all([
-        apiGetTasks(user.id),
-        apiGetStreak(user.id),
+        apiGetTasks(),
+        apiGetStreak(),
       ]);
       setTasks(t);
       setStreak(s);
@@ -110,6 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const u = await apiRegister(username, password, fullName);
       setUser(u);
+      setToken(u.token);
       return true;
     } catch {
       return false;
@@ -123,6 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const u = await apiLogin(username, password);
       setUser(u);
+      setToken(u.token);
       return true;
     } catch {
       return false;
@@ -132,6 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     apiLogout();
     setUser(null);
+    setToken(null);
     setTasks([]);
     setStreak({
       current: 0,
@@ -144,25 +156,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     task: Omit<Task, "id" | "completed" | "created_at">
   ) => {
     if (!user) return;
-    await apiCreateTask(user.id, task);
+    await apiCreateTask(task);
     await refreshTasks();
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     if (!user) return;
-    await apiUpdateTask(user.id, id, updates);
+    await apiUpdateTask(id, updates);
     await refreshTasks();
   };
 
   const deleteTask = async (id: string) => {
     if (!user) return;
-    await apiDeleteTask(user.id, id);
+    await apiDeleteTask(id);
     await refreshTasks();
   };
 
   const completeTask = async (id: string) => {
     if (!user) return;
-    const result = await apiCompleteTask(user.id, id);
+    const result = await apiCompleteTask(id);
     setStreak(result.streak);
     await refreshTasks();
   };

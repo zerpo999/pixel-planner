@@ -2,29 +2,26 @@ import { Task, User, Streak } from "@/types";
 
 const API_BASE = "http://127.0.0.1:8000";
 
-function getStoredUser(): User | null {
-  const raw = localStorage.getItem("sq_current_user");
-  if (!raw) return null;
-
-  try {
-    return JSON.parse(raw);
-  } catch {
-    localStorage.removeItem("sq_current_user");
-    return null;
-  }
+// ------------------------------
+// Token & auth helpers
+// ------------------------------
+function getToken(): string | null {
+  return localStorage.getItem("access_token");
 }
 
-function getToken(): string | null {
-  return getStoredUser()?.token ?? null;
+function setToken(token: string): void {
+  localStorage.setItem("access_token", token);
+}
+
+function removeToken(): void {
+  localStorage.removeItem("access_token");
 }
 
 function authHeaders(includeJson = true): HeadersInit {
   const token = getToken();
   const headers: HeadersInit = {};
-
   if (includeJson) headers["Content-Type"] = "application/json";
   if (token) headers["Authorization"] = `Bearer ${token}`;
-
   return headers;
 }
 
@@ -37,12 +34,15 @@ async function parseError(res: Response, fallback: string): Promise<never> {
   }
 }
 
+// ------------------------------
+// Data mapping
+// ------------------------------
 function mapBackendTask(task: any): Task {
   return {
     id: String(task.id),
     title: task.title,
     description: task.description ?? "",
-    category: task.category ?? "Study",
+    category: task.category ?? "",
     color: task.color_code ?? "#ff6b6b",
     due_date: task.due_date ? String(task.due_date).split("T")[0] : "",
     priority: task.priority ?? "medium",
@@ -61,8 +61,9 @@ function mapUserForFrontend(user: any, token: string): User {
   };
 }
 
-// AUTH
-
+// ------------------------------
+// AUTH ENDPOINTS
+// ------------------------------
 export async function apiRegister(
   username: string,
   password: string,
@@ -85,13 +86,11 @@ export async function apiRegister(
 
   const createdUser = await registerRes.json();
 
+  // Auto-login after registration
   const loginRes = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      username,
-      password,
-    }),
+    body: new URLSearchParams({ username, password }),
   });
 
   if (!loginRes.ok) {
@@ -99,50 +98,81 @@ export async function apiRegister(
   }
 
   const tokenData = await loginRes.json();
-  const user = mapUserForFrontend(createdUser, tokenData.access_token);
+  setToken(tokenData.access_token);
 
-  localStorage.setItem("sq_current_user", JSON.stringify(user));
+  const user = mapUserForFrontend(createdUser, tokenData.access_token);
   return user;
 }
 
-export async function apiLogin(
-  username: string,
-  password: string
-): Promise<User> {
+export async function apiLogin(username: string, password: string): Promise<User> {
   const loginRes = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      username,
-      password,
-    }),
+    body: new URLSearchParams({ username, password }),
   });
 
   if (!loginRes.ok) {
-    localStorage.removeItem("sq_current_user");
+    removeToken();
     await parseError(loginRes, "Invalid credentials");
   }
 
   const tokenData = await loginRes.json();
+  setToken(tokenData.access_token);
 
-  const user: User = {
-    id: username,
-    username,
-    fullName: username,
-    token: tokenData.access_token,
-  };
-
-  localStorage.setItem("sq_current_user", JSON.stringify(user));
+  // Fetch current user to get proper id and full_name
+  const meRes = await fetch(`${API_BASE}/auth/me`, {
+    headers: authHeaders(false),
+  });
+  let user: User;
+  if (meRes.ok) {
+    const me = await meRes.json();
+    user = {
+      id: String(me.id),
+      username: me.username,
+      fullName: me.full_name ?? username,
+      token: tokenData.access_token,
+    };
+  } else {
+    // Fallback if /auth/me doesn't exist
+    user = {
+      id: username,
+      username,
+      fullName: username,
+      token: tokenData.access_token,
+    };
+  }
   return user;
 }
 
-export function apiLogout() {
-  localStorage.removeItem("sq_current_user");
+export function apiLogout(): void {
+  removeToken();
 }
 
-// TASKS
+// ------------------------------
+// CURRENT USER
+// ------------------------------
+export async function apiGetCurrentUser(): Promise<User> {
+  const res = await fetch(`${API_BASE}/auth/me`, {
+    headers: authHeaders(false),
+  });
 
-export async function apiGetTasks(_userId: string): Promise<Task[]> {
+  if (!res.ok) {
+    await parseError(res, "Failed to get current user");
+  }
+
+  const data = await res.json();
+  return {
+    id: String(data.id),
+    username: data.username,
+    fullName: data.full_name ?? data.username,
+    token: getToken()!,
+  };
+}
+
+// ------------------------------
+// TASK ENDPOINTS
+// ------------------------------
+export async function apiGetTasks(): Promise<Task[]> {
   const res = await fetch(`${API_BASE}/tasks/`, {
     method: "GET",
     headers: authHeaders(false),
@@ -157,7 +187,6 @@ export async function apiGetTasks(_userId: string): Promise<Task[]> {
 }
 
 export async function apiCreateTask(
-  _userId: string,
   task: Omit<Task, "id" | "completed" | "created_at">
 ): Promise<Task> {
   const res = await fetch(`${API_BASE}/tasks/`, {
@@ -181,25 +210,27 @@ export async function apiCreateTask(
   return mapBackendTask(data);
 }
 
+// Updated: only send fields that are actually present in the updates object
 export async function apiUpdateTask(
-  _userId: string,
-  id: string,
+  taskId: string,
   updates: Partial<Task>
 ): Promise<Task> {
-  const res = await fetch(`${API_BASE}/tasks/${id}`, {
+  const body: any = {};
+
+  if (updates.title !== undefined) body.title = updates.title;
+  if (updates.description !== undefined) body.description = updates.description ?? null;
+  if (updates.category !== undefined) body.category = updates.category ?? null;
+  if (updates.color !== undefined) body.color_code = updates.color ?? null;
+  if (updates.priority !== undefined) body.priority = updates.priority ?? "medium";
+  if (updates.completed !== undefined) body.completed = updates.completed;
+  if (updates.due_date !== undefined) {
+    body.due_date = updates.due_date ? `${updates.due_date}T00:00:00` : null;
+  }
+
+  const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
     method: "PUT",
     headers: authHeaders(true),
-    body: JSON.stringify({
-      title: updates.title,
-      description: updates.description ?? null,
-      category: updates.category ?? null,
-      color_code: updates.color ?? null,
-      due_date: updates.due_date
-        ? `${updates.due_date}T00:00:00`
-        : updates.due_date ?? null,
-      priority: updates.priority ?? "medium",
-      completed: updates.completed,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -210,11 +241,8 @@ export async function apiUpdateTask(
   return mapBackendTask(data);
 }
 
-export async function apiDeleteTask(
-  _userId: string,
-  id: string
-): Promise<void> {
-  const res = await fetch(`${API_BASE}/tasks/${id}`, {
+export async function apiDeleteTask(taskId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
     method: "DELETE",
     headers: authHeaders(false),
   });
@@ -224,18 +252,17 @@ export async function apiDeleteTask(
   }
 }
 
-export async function apiCompleteTask(
-  userId: string,
-  id: string
-): Promise<{ task: Task; streak: Streak }> {
-  const task = await apiUpdateTask(userId, id, { completed: true });
-  const streak = await apiGetStreak(userId);
-  return { task, streak };
+// Fixed: now sends only { completed: true }
+export async function apiCompleteTask(taskId: string): Promise<{ task: Task; streak: Streak }> {
+  const updatedTask = await apiUpdateTask(taskId, { completed: true });
+  const streak = await apiGetStreak();
+  return { task: updatedTask, streak };
 }
 
-// STREAK
-
-export async function apiGetStreak(_userId: string): Promise<Streak> {
+// ------------------------------
+// STREAK ENDPOINTS
+// ------------------------------
+export async function apiGetStreak(): Promise<Streak> {
   const res = await fetch(`${API_BASE}/tasks/streak`, {
     method: "GET",
     headers: authHeaders(false),
