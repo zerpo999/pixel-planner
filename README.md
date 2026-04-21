@@ -97,11 +97,11 @@ npm test
 ```
 ## Deployment
 ### Frontend (Firebase Hosting)
-1. Install Firebase CLI (`npm install -g firebase-tools`)
-2. Login: (`firebase login`)
-3. Initialize: (`firebase init hosting`) (public directory = (`dist`), single-page app = yes)
-4. Build: (`npm run build`)
-5. Deploy: (`firebase deploy --only hosting`)
+1. Install Firebase CLI `npm install -g firebase-tools`
+2. Login: `firebase login`
+3. Initialize: `firebase init hosting` (public directory = `dist`, single-page app = yes)
+4. Build: `npm run build`
+5. Deploy: `firebase deploy --only hosting`
 
 Your frontend is live at (`https://pixel-planner-se.web.app`)
 
@@ -116,7 +116,7 @@ gcloud run deploy pixel-planner-backend \
     --allow-unauthenticated \
     --update-env-vars SECRET_KEY=your-actual-key,ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=10080
 ```
-3. After deployment, copy the Cloud Run URL and update (`API_BASE`) in (`frontend/src/services/api.ts`).
+3. After deployment, copy the Cloud Run URL and update `API_BASE` in `frontend/src/services/api.ts`.
 4. Rebuild and redeploy the frontend.
 
 Note: SQLite on Cloud Run is ephemeral – data resets on container restart. For persistent storage, switch to Cloud SQL (PostgreSQL) later.
